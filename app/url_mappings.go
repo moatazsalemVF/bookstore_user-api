@@ -1,13 +1,13 @@
 package app
 
 import (
-	"github.com/moatazsalemVF/bookstore_user-api/controllers/ping_controller"
-	"github.com/moatazsalemVF/bookstore_user-api/controllers/user_controller"
+	"github.com/moatazsalemVF/bookstore_user-api/controllers/ping"
+	"github.com/moatazsalemVF/bookstore_user-api/controllers/users"
 )
 
 func mapUrls() {
-	router.GET("/ping", ping_controller.Ping)
+	router.GET("/ping", ping.Ping)
 
-	router.GET("/users/:user_id", user_controller.GetUser)
-	router.POST("/users", user_controller.CreateUser)
+	router.GET("/users/:user_id", users.GetUser)
+	router.POST("/users", users.CreateUser)
 }
