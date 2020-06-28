@@ -1,30 +1,31 @@
 package users
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/moatazsalemVF/bookstore_user-api/domain/users"
+	"github.com/moatazsalemVF/bookstore_user-api/services"
+	"github.com/moatazsalemVF/bookstore_user-api/utils/errors"
 )
 
 //CreateUser is a func to create users
 func CreateUser(c *gin.Context) {
 	user := users.User{}
-	bytes, err := ioutil.ReadAll(c.Request.Body)
-	fmt.Println(string(bytes))
-	if err != nil {
-		//TODO: Handle Error here
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		restErr := errors.NewBadRequestError("Invalid JSON Body")
+		c.JSON(restErr.Status, restErr)
 		return
 	}
-	if err := json.Unmarshal(bytes, &user); err != nil {
-		//TODO: Handle JSON Error here
+
+	result, saveErr := services.CreateUser(user)
+	if saveErr != nil {
+		c.JSON(saveErr.Status, saveErr)
 		return
 	}
-	fmt.Println(user)
-	c.String(http.StatusNotImplemented, "Implement me!")
+
+	c.JSON(http.StatusCreated, result)
 }
 
 //GetUser is a func to get users details
