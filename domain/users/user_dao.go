@@ -1,6 +1,9 @@
 package users
 
-import "github.com/moatazsalemVF/bookstore_user-api/utils/errors"
+import (
+	"github.com/moatazsalemVF/bookstore_user-api/utils/datetime"
+	"github.com/moatazsalemVF/bookstore_user-api/utils/errors"
+)
 
 var (
 	userDB = make(map[int64]*User)
@@ -29,6 +32,7 @@ func (user *User) Save() *errors.RestError {
 		return errors.NewBadRequestError("User Already Exists")
 	}
 
+	user.DateCreated = datetime.GetCurrentTimeUTC()
 	userDB[user.ID] = user
 	return nil
 }
