@@ -1,3 +1,4 @@
+export GIN_MODE=release
 export os_env_mysql_users_username=go
 export os_env_mysql_users_password=go
 export os_env_mysql_users_host=localhost:3306

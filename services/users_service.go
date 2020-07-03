@@ -10,7 +10,24 @@ func CreateUser(user users.User) (*users.User, *errors.RestError) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
-	if err := user.Save(); err != nil {
+	if err := user.SaveOrUpdate(); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+//UpdateUser is the service function to update a user
+func UpdateUser(user users.User) (*users.User, *errors.RestError) {
+	if err := user.SaveOrUpdate(); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+//DeleteUser is the service function to delete a user
+func DeleteUser(user users.User) (*users.User, *errors.RestError) {
+
+	if err := user.Remove(); err != nil {
 		return nil, err
 	}
 	return &user, nil

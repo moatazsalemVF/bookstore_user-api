@@ -1,44 +1,106 @@
 package users
 
 import (
-	"github.com/moatazsalemVF/bookstore_user-api/datasources/mysql"
+	"github.com/moatazsalemVF/bookstore_user-api/datasources/mysqlds"
 	"github.com/moatazsalemVF/bookstore_user-api/utils/datetime"
 	"github.com/moatazsalemVF/bookstore_user-api/utils/errors"
+	mysqlutils "github.com/moatazsalemVF/bookstore_user-api/utils/mysqlUtils"
 )
 
-var (
-	userDB = make(map[int64]*User)
+const (
+	queryInsertUser     = "INSERT INTO users(first_name, last_name, email, date_created) VALUES (?, ?, ?, ?)"
+	querySelectUserByID = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id = ?"
+	queryUpdateUser     = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id = ?"
+	queryDeleteUser     = "DELETE FROM users WHERE id = ?"
 )
 
-//Get is a function to retrieve user info from DB
-func (user *User) Get() *errors.RestError {
+//Remove is a function to save users in MySQL DB
+func (user *User) Remove() *errors.RestError {
+	stmt, err := mysqlds.Client.Prepare(queryDeleteUser)
 
-	if err := mysql.Client.Ping(); err != nil {
-		panic(err)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
 	}
+	defer stmt.Close()
 
-	result := userDB[user.ID]
-	if result == nil {
-		return errors.NewNotFoundError("User Not Found")
+	_, mysqlErr := stmt.Exec(user.ID)
+	if mysqlErr != nil {
+		return mysqlutils.HandleMysqlError(mysqlErr)
 	}
-
-	user.ID = result.ID
-	user.FirstName = result.FirstName
-	user.LastName = result.LastName
-	user.Email = result.Email
-	user.DateCreated = result.DateCreated
 
 	return nil
 }
 
-//Save is a function to save users in MySQL DB
-func (user *User) Save() *errors.RestError {
-	current := userDB[user.ID]
-	if current != nil {
-		return errors.NewBadRequestError("User Already Exists")
+//Get is a function to retrieve user info from DB
+func (user *User) Get() *errors.RestError {
+
+	stmt, err := mysqlds.Client.Prepare(querySelectUserByID)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	result := stmt.QueryRow(user.ID)
+	if err := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); err != nil {
+
+		if mysqlutils.IsEmptyResult(err) {
+			return errors.NewNotFoundError("User was not found")
+		}
+
+		return errors.NewInternalServerError(err.Error())
 	}
 
+	return nil
+}
+
+//SaveOrUpdate is a function to save users in MySQL DB
+func (user *User) SaveOrUpdate() *errors.RestError {
+	if user.ID == 0 {
+		return saveNewUser(user)
+	}
+	return updateUser(user)
+}
+
+func updateUser(user *User) *errors.RestError {
+
+	stmt, err := mysqlds.Client.Prepare(queryUpdateUser)
+
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	_, mysqlErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.ID)
+	if mysqlErr != nil {
+		return mysqlutils.HandleMysqlError(mysqlErr)
+	}
+
+	//get Updated record
+	user.Get()
+
+	return nil
+}
+
+func saveNewUser(user *User) *errors.RestError {
 	user.DateCreated = datetime.GetCurrentTimeUTC()
-	userDB[user.ID] = user
+
+	stmt, err := mysqlds.Client.Prepare(queryInsertUser)
+
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	stmtResult, mysqlErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	if mysqlErr != nil {
+		return mysqlutils.HandleMysqlError(mysqlErr)
+	}
+
+	lastID, err := stmtResult.LastInsertId()
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+
+	user.ID = lastID
 	return nil
 }
