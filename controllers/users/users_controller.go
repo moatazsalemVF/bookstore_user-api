@@ -55,12 +55,13 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	result, saveErr := services.UpdateUser(user)
+	isPartial := c.Request.Method == http.MethodPatch
+
+	result, saveErr := services.UpdateUser(user, isPartial)
 	if saveErr != nil {
 		c.JSON(saveErr.Status, saveErr)
 		return
 	}
-
 	c.JSON(http.StatusOK, result)
 }
 
@@ -84,25 +85,22 @@ func GetUser(c *gin.Context) {
 
 //DeleteUser is a func to update users
 func DeleteUser(c *gin.Context) {
-	user := users.User{}
+	idstr := c.Params.ByName("user_id")
+	id, errparse := strconv.ParseInt(idstr, 10, 64)
 
-	if err := c.ShouldBindJSON(&user); err != nil {
-		restErr := errors.NewBadRequestError("Invalid JSON Body")
-		c.JSON(restErr.Status, restErr)
+	if errparse != nil {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Invalid Id"))
 		return
 	}
 
-	if user.ID == 0 {
-		restErr := errors.NewBadRequestError("Missing User ID")
-		c.JSON(restErr.Status, restErr)
-		return
-	}
-
-	result, saveErr := services.DeleteUser(user)
+	saveErr := services.DeleteUser(id)
 	if saveErr != nil {
 		c.JSON(saveErr.Status, saveErr)
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	user := users.User{}
+	user.ID = id
+
+	c.JSON(http.StatusOK, user)
 }

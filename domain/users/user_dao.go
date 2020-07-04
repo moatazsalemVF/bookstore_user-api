@@ -4,7 +4,7 @@ import (
 	"github.com/moatazsalemVF/bookstore_user-api/datasources/mysqlds"
 	"github.com/moatazsalemVF/bookstore_user-api/utils/datetime"
 	"github.com/moatazsalemVF/bookstore_user-api/utils/errors"
-	mysqlutils "github.com/moatazsalemVF/bookstore_user-api/utils/mysqlUtils"
+	"github.com/moatazsalemVF/bookstore_user-api/utils/mysqlutils"
 )
 
 const (

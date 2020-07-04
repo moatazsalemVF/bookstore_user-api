@@ -17,7 +17,25 @@ func CreateUser(user users.User) (*users.User, *errors.RestError) {
 }
 
 //UpdateUser is the service function to update a user
-func UpdateUser(user users.User) (*users.User, *errors.RestError) {
+func UpdateUser(user users.User, isPartial bool) (*users.User, *errors.RestError) {
+
+	saved := users.User{}
+	saved.ID = user.ID
+	if err := saved.Get(); err != nil {
+		return nil, err
+	}
+
+	if isPartial {
+		if user.FirstName == "" {
+			user.FirstName = saved.FirstName
+		}
+		if user.LastName == "" {
+			user.LastName = saved.LastName
+		}
+		if user.Email == "" {
+			user.Email = saved.Email
+		}
+	}
 	if err := user.SaveOrUpdate(); err != nil {
 		return nil, err
 	}
@@ -25,12 +43,19 @@ func UpdateUser(user users.User) (*users.User, *errors.RestError) {
 }
 
 //DeleteUser is the service function to delete a user
-func DeleteUser(user users.User) (*users.User, *errors.RestError) {
+func DeleteUser(id int64) *errors.RestError {
+	user := users.User{}
+	user.ID = id
+
+	err := user.Get()
+	if err != nil {
+		return err
+	}
 
 	if err := user.Remove(); err != nil {
-		return nil, err
+		return err
 	}
-	return &user, nil
+	return nil
 }
 
 //GetUser is the service function to get a user
