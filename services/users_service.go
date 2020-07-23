@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/moatazsalemVF/bookstore_user-api/domain/users"
+	"github.com/moatazsalemVF/bookstore_user-api/utils/crypto"
 	"github.com/moatazsalemVF/bookstore_user-api/utils/errors"
 )
 
@@ -10,6 +11,9 @@ func CreateUser(user users.User) (*users.User, *errors.RestError) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
+
+	user.Password = crypto.GetMD5(user.Password)
+
 	if err := user.SaveOrUpdate(); err != nil {
 		return nil, err
 	}
@@ -67,4 +71,10 @@ func GetUser(id int64) (*users.User, *errors.RestError) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+//FindUsersByStatus is the service function to get users with specific status
+func FindUsersByStatus(status string) ([]users.User, *errors.RestError) {
+	user := users.User{}
+	return user.FindUsersByStatus(status)
 }

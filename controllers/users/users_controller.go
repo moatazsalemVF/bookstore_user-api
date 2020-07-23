@@ -104,3 +104,21 @@ func DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
+
+//Search is the service function to get users with specific status
+func Search(c *gin.Context) {
+	status := c.Query("status")
+
+	if status == "" {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Invalid Status"))
+		return
+	}
+
+	users, err := services.FindUsersByStatus(status)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}

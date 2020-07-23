@@ -3,7 +3,8 @@ package datetime
 import "time"
 
 const (
-	apiDateLayout = "2006-01-02T15:04:05.000Z"
+	apiDateLayout       = "2006-01-02T15:04:05.000Z"
+	mysqlDateTimeLayout = "2006-01-02 15:04:05"
 )
 
 //GetCurrentTime returns the current time in UTC
@@ -13,6 +14,10 @@ func GetCurrentTime() time.Time {
 
 //GetCurrentTimeUTC returns a UTC time
 func GetCurrentTimeUTC() string {
-	time := GetCurrentTime()
-	return time.Format(apiDateLayout)
+	return GetCurrentTime().Format(apiDateLayout)
+}
+
+//GetMysqlCurrentTimeUTC returns a UTC time in mysql format
+func GetMysqlCurrentTimeUTC() string {
+	return GetCurrentTime().Format(mysqlDateTimeLayout)
 }
